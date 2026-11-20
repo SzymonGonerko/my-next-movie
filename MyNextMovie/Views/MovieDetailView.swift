@@ -10,16 +10,42 @@ private let posterShadowOffset: CGFloat = 10
 struct MovieDetailView: View {
     let movie: Movie
 
+    @State private var viewModel: MovieDetailViewModel
+
+    init(movie: Movie, loadDetails: @escaping MovieDetailsLoader) {
+        self.movie = movie
+        _viewModel = State(
+            initialValue: MovieDetailViewModel(movieId: movie.id, loadDetails: loadDetails)
+        )
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: spacingExtraLarge) {
                 MovieBackdrop(movie: movie)
-                MovieInfo(movie: movie).padding(.horizontal)
+                MovieInfo(movie: movie, details: viewModel.details).padding(.horizontal)
+                detailsContent
             }
             .padding(.bottom, spacingHuge)
         }
         .ignoresSafeArea(edges: .top)
         .navigationBarTitleDisplayMode(.inline)
+        .task { await viewModel.loadIfNeeded() }
+    }
+
+    /// The movie from the list stays on screen whatever happens to its details.
+    @ViewBuilder
+    private var detailsContent: some View {
+        switch viewModel.state {
+        case .idle, .loading:
+            ProgressView().frame(maxWidth: .infinity)
+        case .loaded:
+            MovieDetailSections(details: viewModel.details)
+        case .failed:
+            ErrorView(title: "Could not load details", message: viewModel.errorMessage) {
+                Task { await viewModel.load() }
+            }
+        }
     }
 }
 
@@ -65,15 +91,18 @@ private struct BlurredPoster: View {
     }
 }
 
-/// Title, year and rating, genres and overview under the backdrop.
+/// Title, tagline, facts, genres, overview and directors under the backdrop.
+/// The parts from `details` show only when they have data.
 private struct MovieInfo: View {
     let movie: Movie
+    let details: MovieDetails
 
     var body: some View {
         VStack(alignment: .leading, spacing: spacingLarge) {
             heading
             GenreRow(genreIds: knownGenreIds(movie))
             overview
+            directors
         }
     }
 
@@ -81,9 +110,31 @@ private struct MovieInfo: View {
         VStack(alignment: .leading, spacing: spacingSmall) {
             Text(movie.title)
                 .font(.system(.largeTitle, design: .serif, weight: .bold))
-            Text(yearAndRating(movie))
+            tagline
+            Text(movieFactsLine(movie, details, regionCode: watchRegionCode))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private var tagline: some View {
+        if !details.tagline.isEmpty {
+            Text(details.tagline)
+                .font(.headline)
+                .italic()
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private var directors: some View {
+        let names = directorNames(details)
+        if !names.isEmpty {
+            VStack(alignment: .leading, spacing: spacingSmall) {
+                Text("Directed by").font(.headline)
+                Text(names).foregroundStyle(.secondary)
+            }
         }
     }
 
@@ -118,7 +169,9 @@ private struct GenreRow: View {
 }
 
 #Preview {
-    NavigationStack {
-        MovieDetailView(movie: sampleMovies[0])
+    PopularMoviesPreview { movies in
+        NavigationStack {
+            MovieDetailView(movie: movies[0], loadDetails: fetchMovieDetails)
+        }
     }
 }
