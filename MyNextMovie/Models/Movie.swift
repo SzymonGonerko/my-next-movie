@@ -29,7 +29,7 @@ nonisolated struct Movie: Identifiable, Hashable, Codable {
 
 /// "1999-03-31" -> "1999", empty when the date is unknown.
 func releaseYear(_ movie: Movie) -> String {
-    guard movie.releaseDate.count >= releaseYearLength else {
+    if movie.releaseDate.count < releaseYearLength {
         return ""
     }
     return String(movie.releaseDate.prefix(releaseYearLength))
@@ -42,15 +42,16 @@ func formattedRating(_ movie: Movie) -> String {
 
 /// 8.24 -> "★ 8.2"
 func ratingWithStar(_ movie: Movie) -> String {
-    // TODO: Lab 1, task 2. `ratingStar`, a space, then `formattedRating(movie)`.
-    return ""
+    return ratingStar + " " + formattedRating(movie)
 }
 
 /// "2014 · ★ 8.4", or "★ 8.4" when the release date is unknown.
 func yearAndRating(_ movie: Movie) -> String {
-    // TODO: Lab 1, task 2. Join `releaseYear(movie)` and `ratingWithStar(movie)`
-    // with `textSeparator`. Leave the year and the separator out when the year is "".
-    return ""
+    let year = releaseYear(movie)
+    if year.isEmpty {
+        return ratingWithStar(movie)
+    }
+    return year + textSeparator + ratingWithStar(movie)
 }
 
 /// Poster address on the TMDB image server, nil when the movie has no poster.

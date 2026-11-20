@@ -22,11 +22,7 @@ struct MovieCardView: View {
                 RatingBadge(movie: movie)
                     .padding(spacingSmall)
             }
-            .shadow(
-                color: cardShadowColor,
-                radius: cardShadowRadius,
-                y: cardShadowOffset
-            )
+            .shadow(color: cardShadowColor, radius: cardShadowRadius, y: cardShadowOffset)
     }
 
     private var caption: some View {

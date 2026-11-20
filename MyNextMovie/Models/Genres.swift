@@ -88,15 +88,21 @@ func genreSymbolName(_ genreId: Int) -> String {
 /// Genre ids of the movie that TMDB knows, in the original order.
 func knownGenreIds(_ movie: Movie) -> [Int] {
     var knownIds: [Int] = []
-    for genreId in movie.genreIds where positionInGenreTable(genreId) != genreNotInTable {
-        knownIds.append(genreId)
+    for genreId in movie.genreIds {
+        if positionInGenreTable(genreId) != genreNotInTable {
+            knownIds.append(genreId)
+        }
     }
     return knownIds
 }
 
 /// First genre of the movie that TMDB knows, `noGenreId` when there is none.
 func mainGenreId(_ movie: Movie) -> Int {
-    knownGenreIds(movie).first ?? noGenreId
+    let knownIds = knownGenreIds(movie)
+    if knownIds.isEmpty {
+        return noGenreId
+    }
+    return knownIds[0]
 }
 
 /// "1999 · Action"
@@ -107,9 +113,9 @@ func movieSubtitle(_ movie: Movie) -> String {
     if !year.isEmpty {
         parts.append(year)
     }
-    let genreId = mainGenreId(movie)
-    if genreId != noGenreId {
-        parts.append(genreName(genreId))
+    let mainGenre = mainGenreId(movie)
+    if mainGenre != noGenreId {
+        parts.append(genreName(mainGenre))
     }
     return parts.joined(separator: textSeparator)
 }
