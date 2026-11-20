@@ -18,11 +18,13 @@ struct MovieCardView: View {
 
     private var poster: some View {
         PosterView(movie: movie)
-            .overlay(alignment: .topTrailing) {
-                RatingBadge(movie: movie)
-                    .padding(spacingSmall)
-            }
+            .overlay(alignment: .topTrailing) { ratingBadge }
             .shadow(color: cardShadowColor, radius: cardShadowRadius, y: cardShadowOffset)
+    }
+
+    private var ratingBadge: some View {
+        RatingBadge(movie: movie)
+            .padding(spacingSmall)
     }
 
     private var caption: some View {

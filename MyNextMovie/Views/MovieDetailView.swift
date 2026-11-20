@@ -103,13 +103,17 @@ private struct GenreRow: View {
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: spacingSmall) {
-                ForEach(genreIds, id: \.self) { genreId in
-                    GenreChip(genreId: genreId)
-                }
-            }
+            chips
         }
         .scrollClipDisabled()
+    }
+
+    private var chips: some View {
+        HStack(spacing: spacingSmall) {
+            ForEach(genreIds, id: \.self) { genreId in
+                GenreChip(genreId: genreId)
+            }
+        }
     }
 }
 
